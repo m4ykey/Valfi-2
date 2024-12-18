@@ -31,8 +31,9 @@ class AlbumCoverFragment : BaseFragment<FragmentAlbumCoverBinding>(
         binding.apply {
             toolbar.setNavigationOnClickListener { findNavController().navigateUp() }
             loadImageWithColors(imgAlbum, args.imgUrl, requireContext()) { bitmap ->
-                val colors = extractColorsFromBitmap(bitmap)
-                colorAdapter.submitList(colors.map { ColorList(color = it) })
+                val colors = extractColorsFromBitmap(bitmap).takeIf { it.isNotEmpty() } ?: emptyList()
+                val colorItems = colors.map { ColorList(color = it) }
+                colorAdapter.submitList(colorItems)
             }
 
             recyclerViewColors.apply {

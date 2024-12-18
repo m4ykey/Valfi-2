@@ -35,7 +35,6 @@ import com.m4ykey.ui.helpers.getArtistList
 import com.m4ykey.ui.helpers.getLargestImageUrl
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.Locale
 
@@ -86,7 +85,7 @@ class AlbumDetailFragment : BaseFragment<FragmentAlbumDetailBinding>(
 
         lifecycleScope.launch {
             delay(500L)
-            viewModel.tracks.collectLatest { trackAdapter.submitList(it) }
+            viewModel.tracks.collect { trackAdapter.submitList(it) }
         }
 
         lifecycleScope.launch {
@@ -251,7 +250,10 @@ class AlbumDetailFragment : BaseFragment<FragmentAlbumDetailBinding>(
             )
             val albumUrl = item.externalUrls.spotify
             val artistUrl = item.artists[0].externalUrls.spotify
-            val copyrights = item.copyrights.joinToString(separator = "\n") { it.text }
+            val copyrights = item.copyrights
+                .map { it.text }
+                .distinct()
+                .joinToString(separator = "\n")
 
             txtAlbumName.apply {
                 text = item.name
@@ -325,6 +327,7 @@ class AlbumDetailFragment : BaseFragment<FragmentAlbumDetailBinding>(
                 lifecycleScope.launch {
                     val isAlbumSaved = viewModel.getSavedAlbumState(item.id)
                     val isListenLaterSaved = viewModel.getListenLaterState(item.id)
+
                     if (isListenLaterSaved?.isListenLaterSaved == true) {
                         viewModel.deleteListenLaterState(item.id)
                         if (isAlbumSaved == null) {
@@ -332,6 +335,7 @@ class AlbumDetailFragment : BaseFragment<FragmentAlbumDetailBinding>(
                         }
                         imgListenLater.buttonAnimation(R.drawable.ic_listen_later_border)
                     }
+
                     if (isAlbumSaved != null) {
                         viewModel.deleteSavedAlbumState(item.id)
                         if (isListenLaterSaved == null) {

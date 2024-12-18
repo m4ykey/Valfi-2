@@ -15,6 +15,7 @@ import com.m4ykey.data.local.model.IsAlbumSaved
 import com.m4ykey.data.local.model.IsListenLaterSaved
 import com.m4ykey.data.local.model.relations.AlbumWithStates
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,8 +58,12 @@ class AlbumViewModel @Inject constructor(
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                getAlbumTracks(id)
-                getAlbumById(id)
+                val albumTracks = async { getAlbumTracks(id) }
+                val albumDetail = async { getAlbumById(id) }
+
+                albumDetail.await()
+                albumTracks.await()
+
             } finally {
                 _isLoading.value = false
             }
